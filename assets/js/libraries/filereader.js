@@ -113,6 +113,21 @@ See http://github.com/bgrins/filereader.js for documentation
             return;
         }
 
+        // dragenterData: keep track of dragenter/dragleave on child nodes.
+        // The problem is that dragenter on a child fires before dragleave on a parent,
+        // so keep a counter on the parent to prevent removing class prematurely
+        function dragenterData(val) {
+            if (arguments.length == 0) {
+                return parseInt(dropbox.getAttribute("data-child-dragenter")) || 0;
+            }
+            else if (!val) {
+                dropbox.removeAttribute("data-child-dragenter");
+            }
+            else {
+                dropbox.setAttribute("data-child-dragenter", Math.max(0, val));
+            }
+        }
+
         var instanceOptions = extend(extend({}, FileReaderJS.opts), opts),
             dragClass = instanceOptions.dragClass;
 
@@ -124,12 +139,16 @@ See http://github.com/bgrins/filereader.js for documentation
         function drop(e) {
             e.stopPropagation();
             e.preventDefault();
+            
             if (dragClass) {
                 removeClass(dropbox, dragClass);
             }
             processFileList(e.dataTransfer.files, instanceOptions);
         }
         function dragenter(e) {
+        
+            dragenterData(dragenterData() + 1);
+            
             if (dragClass) {
                 addClass(dropbox, dragClass);
             }
@@ -137,14 +156,17 @@ See http://github.com/bgrins/filereader.js for documentation
             e.preventDefault();
         }
         function dragleave(e) {
-            if (dragClass) {
-                removeClass(dropbox, dragClass);
+        
+            dragenterData(dragenterData() - 1);
+            
+            if (!dragenterData()) {
+                if (dragClass) {
+                    removeClass(dropbox, dragClass);
+                }
+                dragenterData(false);
             }
         }
         function dragover(e) {
-            if (dragClass) {
-                addClass(dropbox, dragClass);
-            }
             e.stopPropagation();
             e.preventDefault();
         }
@@ -262,20 +284,22 @@ See http://github.com/bgrins/filereader.js for documentation
     }
 
     // hasClass: does an element have the css class?
-    function hasClass(ele,cls) {
-        return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
+    function hasClass(el, name) {
+        return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(el.className);
     }
 
     // addClass: add the css class for the element.
-    function addClass(ele,cls) {
-        if (!hasClass(ele,cls)) ele.className += " "+cls;
+    function addClass(el, name) {
+        if (!hasClass(el, name)) {
+          el.className = el.className ? [el.className, name].join(' ') : name;
+        }
     }
 
     // removeClass: remove the css class from the element.
-    function removeClass(ele,cls) {
-        if (hasClass(ele,cls)) {
-            var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
-            ele.className=ele.className.replace(reg,' ');
+    function removeClass(el, name) {
+        if (hasClass(el, name)) {
+          var c = el.className;
+          el.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), " ").replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         }
     }
 
