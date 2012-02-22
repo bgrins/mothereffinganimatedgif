@@ -72,6 +72,26 @@ $(window).bind('firstimage', function(){
 	new qualitySlider();
 });
 
+
+
+Element.prototype.hasClassName = function(name) {
+  return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(this.className);
+};
+
+Element.prototype.addClassName = function(name) {
+  if (!this.hasClassName(name)) {
+    this.className = this.className ? [this.className, name].join(' ') : name;
+  }
+};
+
+Element.prototype.removeClassName = function(name) {
+  if (this.hasClassName(name)) {
+    var c = this.className;
+    this.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+  }
+};
+
+
 var samples = samples || {};
 
 // http://www.html5rocks.com/en/tutorials/dnd/basics/#toc-examples
@@ -131,3 +151,4 @@ function setupDrag() {
   container.on("drop", ".col", handleDrop);
   container.on("dragend", ".col", handleDragEnd);
 }
+
