@@ -173,7 +173,11 @@
             rotations.push($(el).data('rotation'));
         });
 
-        App.mfAnimatedGIF = new MFAnimatedGIF({
+        console.time('App.mfAnimatedGIF()');
+
+        var worker = new Worker('/assets/js/worker.js');
+
+        var animOpts = {
             images: App.timeline,
             rotations: rotations,
             delay : App.rate, 
@@ -183,7 +187,11 @@
             // use dimensions from first image as default
             height: App.animHeight || App.timeline[0].height,
             width : App.animWidth  || App.timeline[0].width
-        });
+        }
+
+        App.mfAnimatedGIF = new MFAnimatedGIF(animOpts); // TODO: should be done in worker
+
+        console.timeEnd('App.mfAnimatedGIF()');
 
         $('#sharelink').css({'display':'inline-block'});
 
